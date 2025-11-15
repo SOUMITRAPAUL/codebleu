@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blue AI Code Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, sans-serif;
+      margin: 2rem;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    h1 { color: #ffffff; }
+    label { display: block; margin: 0.5rem 0; font-weight: 600; }
+    select, textarea {
+      width: 100%;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      padding: 0.5rem;
+      border-radius: 4px;
+    }
+    textarea { min-height: 140px; }
+    pre {
+      background: #1e1e1e;
+      color: #e0e0e0;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow: auto;
+      border: 1px solid #333;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .btn {
+      padding: 0.6rem 1rem;
+      background: #0969da;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Blue AI Code Generator</h1>
+
+  <section>
+    <label>Language</label>
+    <select id="language">
+      <option value="python">Python</option>
+      <option value="cpp">C++</option>
+      <option value="java">Java</option>
+      <option value="javascript">JavaScript</option>
+    </select>
+
+    <label>Prompt</label>
+    <textarea id="prompt" placeholder="Describe the code you want..."></textarea>
+
+    <button class="btn" id="genBtn">Generate code</button>
+    <button class="btn" id="downloadBtn">Download code</button>
+
+    <h3>Generated code</h3>
+    <pre id="codeOut"></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="row">
+      <div>
+        <label>Reference code</label>
+        <textarea id="reference" placeholder="Paste reference code here..."></textarea>
+      </div>
+      <div>
+        <label>Candidate code</label>
+        <textarea id="candidate" placeholder="Paste generated code here..."></textarea>
+      </div>
+    </div>
+
+    <label>Evaluation language</label>
+    <select id="evalLang">
+      <option value="python">Python</option>
+      <option value="cpp">C++</option>
+      <option value="java">Java</option>
+      <option value="javascript">JavaScript</option>
+    </select>
+
+    <button class="btn" id="evalBtn">Evaluate CodeBLEU</button>
+
+    <h3>CodeBLEU score breakdown</h3>
+    <pre id="scoreOut"></pre>
+  </section>
+
+  <script>
+    const genBtn = document.getElementById('genBtn');
+    const codeOut = document.getElementById('codeOut');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    genBtn.onclick = async () => {
+      genBtn.disabled = true;
+      codeOut.textContent = '';
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            language: document.getElementById('language').value,
+            prompt: document.getElementById('prompt').value
+          })
+        });
+        const text = await res.text();
+        codeOut.textContent = text;
+        document.getElementById('candidate').value = text;
+      } catch (e) {
+        codeOut.textContent = 'Error generating code';
+        console.error(e);
+      } finally {
+        genBtn.disabled = false;
+      }
+    };
+
+    downloadBtn.onclick = () => {
+      const code = codeOut.textContent;
+      const lang = document.getElementById('language').value;
+      if (!code) return;
+      const extMap = { python: "py", cpp: "cpp", java: "java", javascript: "js" };
+      const ext = extMap[lang] || "txt";
+      const blob = new Blob([code], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `generated_code.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    const evalBtn = document.getElementById('evalBtn');
+    const scoreOut = document.getElementById('scoreOut');
+
+    evalBtn.onclick = async () => {
+      evalBtn.disabled = true;
+      scoreOut.textContent = '';
+      try {
+        const res = await fetch('/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reference: document.getElementById('reference').value,
+            candidate: document.getElementById('candidate').value,
+            language: document.getElementById('evalLang').value
+          })
+        });
+        const json = await res.json();
+        scoreOut.textContent =
+          `BLEU-4: ${json["BLEU-4"]}\n` +
+          `Keyword Precision: ${json["KeywordPrecision"]}\n` +
+          `Syntax Overlap: ${json["SyntaxOverlap"]}\n` +
+          `Identifier Penalty: ${json["IdentifierPenalty"]}\n` +
+          `Final Score: ${json["FinalScore"]}\n\n` +
+          `Recommendations:\n- ${json["Recommendations"].join("\n- ")}`;
+      } catch (e) {
+        scoreOut.textContent = 'Error evaluating code';
+        console.error(e);
+      } finally {
+        evalBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
+
