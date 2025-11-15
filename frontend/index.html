@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Generator & Validator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🤖 AI Code Generator & Validator</h1>
+            <p>Generate and validate code using local LLM models with CodeBLEU metric</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Code Generation Section -->
+            <section class="generation-section">
+                <h2>📝 Code Generation</h2>
+                
+                <div class="form-group">
+                    <label for="language">Programming Language:</label>
+                    <select id="language">
+                        <option value="python">Python</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="c">C</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="query">Code Request:</label>
+                    <textarea 
+                        id="query" 
+                        placeholder="e.g., Write a function to reverse a string"
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <button id="generateBtn" class="btn btn-primary">
+                    <span class="btn-text">Generate Code</span>
+                    <span class="loader" style="display: none;"></span>
+                </button>
+
+                <div id="generatedCodeSection" class="code-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>Generated Code</h3>
+                        <button id="downloadBtn" class="btn btn-small">📥 Download</button>
+                    </div>
+                    <pre><code id="generatedCode"></code></pre>
+                </div>
+            </section>
+
+            <!-- Code Validation Section -->
+            <section class="validation-section">
+                <h2>✅ Code Validation</h2>
+                
+                <div class="form-group">
+                    <label for="referenceCode">Reference Code (Ground Truth):</label>
+                    <textarea 
+                        id="referenceCode" 
+                        placeholder="Paste reference/expected code for comparison..."
+                        rows="8"
+                    ></textarea>
+                </div>
+
+                <button id="validateBtn" class="btn btn-secondary" disabled>
+                    <span class="btn-text">Validate with CodeBLEU</span>
+                    <span class="loader" style="display: none;"></span>
+                </button>
+
+                <div id="validationResults" class="results-section" style="display: none;">
+                    <h3>📊 Validation Results</h3>
+                    
+                    <div class="score-card">
+                        <div class="score-main">
+                            <span class="score-label">CodeBLEU Score</span>
+                            <span id="codebluScore" class="score-value">0.0000</span>
+                        </div>
+                        <span id="qualityBadge" class="quality-badge">-</span>
+                    </div>
+
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-header">
+                                <span class="metric-name">N-gram Match</span>
+                                <span id="ngramScore" class="metric-value">0.0000</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="ngramBar" class="progress-fill"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="metric-header">
+                                <span class="metric-name">Syntax Match</span>
+                                <span id="syntaxScore" class="metric-value">0.0000</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="syntaxBar" class="progress-fill"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="metric-header">
+                                <span class="metric-name">Dataflow Match</span>
+                                <span id="dataflowScore" class="metric-value">0.0000</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="dataflowBar" class="progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recommendations">
+                        <h4>💡 Recommendations:</h4>
+                        <ul id="recommendationsList"></ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
